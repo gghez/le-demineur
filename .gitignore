@@ -1,0 +1,15 @@
+# Android / Gradle
+.gradle/
+build/
+/local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+# Keystores / secrets
+*.jks
+*.keystore
+!debug.keystore
+# OS
+.DS_Store
