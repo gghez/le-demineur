@@ -13,3 +13,5 @@ captures/
 !debug.keystore
 # OS
 .DS_Store
+# Claude Code worktrees / local agent state
+.claude/
