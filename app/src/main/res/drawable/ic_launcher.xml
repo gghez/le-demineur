@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Win95 raised tile background -->
+    <path android:fillColor="#C0C0C0" android:pathData="M0,0 H108 V108 H0 Z" />
+    <!-- Top/left highlight -->
+    <path android:fillColor="#FFFFFF" android:pathData="M8,8 H100 V14 H14 V100 H8 Z" />
+    <!-- Bottom/right shadow -->
+    <path android:fillColor="#808080" android:pathData="M100,8 V100 H8 V94 H94 V8 Z" />
+
+    <!-- Mine spikes -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="8"
+        android:pathData="M54,26 L54,82 M26,54 L82,54 M34,34 L74,74 M74,34 L34,74" />
+    <!-- Mine body -->
+    <path android:fillColor="#000000" android:pathData="M54,32 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M32,54 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0"
+        android:fillAlpha="0" />
+    <path android:fillColor="#000000" android:pathData="M54,54 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0" />
+    <!-- Highlight glint -->
+    <path android:fillColor="#FFFFFF" android:pathData="M44,44 h10 v10 h-10 Z" />
+</vector>

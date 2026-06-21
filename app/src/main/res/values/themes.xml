@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base theme: no action bar, Compose draws everything. Background matches Win95 desktop teal. -->
+    <style name="Theme.Demineur" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#FF008080</item>
+        <item name="android:navigationBarColor">#FFC0C0C0</item>
+        <item name="android:windowBackground">#FF008080</item>
+    </style>
+</resources>

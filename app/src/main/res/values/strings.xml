@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Démineur</string>
+
+    <!-- Window chrome -->
+    <string name="window_title">Démineur</string>
+    <string name="menu_game">Partie</string>
+    <string name="menu_help">?</string>
+
+    <!-- Menu actions -->
+    <string name="action_new_game">Nouvelle partie</string>
+    <string name="action_beginner">Débutant</string>
+    <string name="action_intermediate">Intermédiaire</string>
+    <string name="action_expert">Expert</string>
+    <string name="action_custom">Personnalisé…</string>
+    <string name="action_leaderboard">Meilleurs scores</string>
+    <string name="action_sign_in">Connexion Google Play</string>
+
+    <!-- Custom dialog -->
+    <string name="custom_title">Partie personnalisée</string>
+    <string name="custom_rows">Lignes</string>
+    <string name="custom_cols">Colonnes</string>
+    <string name="custom_mines">Mines</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Annuler</string>
+
+    <!-- Win / lose -->
+    <string name="new_record">Nouveau record : %1$s !</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_smiley">Recommencer</string>
+    <string name="cd_mine_count">Mines restantes</string>
+    <string name="cd_timer">Temps écoulé</string>
+</resources>
