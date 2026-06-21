@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
@@ -54,6 +55,7 @@ fun GameScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Win95.Desktop)
+            .systemBarsPadding()
             .win95Bevel(raised = true, thickness = 3.dp)
             .padding(3.dp),
     ) {
@@ -94,7 +96,7 @@ fun GameScreen(
                 .weight(1f)
                 .win95Bevel(raised = false, thickness = 3.dp)
                 .padding(3.dp),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.TopCenter,
         ) {
             Box(
                 modifier = Modifier
