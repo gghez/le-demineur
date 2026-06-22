@@ -7,4 +7,4 @@ Minesweeper for Android (Windows 95 style) with Google Play Games leaderboards.
 - **minSdk:** 24 — **compileSdk/targetSdk:** 35
 - **Leaderboards:** Google Play Games Services (per difficulty), local fallback
 
-Setup details: see `docs/`.
+Deployment and Play Console setup are tracked in the [issues](https://github.com/gghez/le-demineur/issues).
