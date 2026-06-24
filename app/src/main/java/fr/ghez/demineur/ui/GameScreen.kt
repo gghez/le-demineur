@@ -32,6 +32,7 @@ import fr.ghez.demineur.game.Difficulty
 import fr.ghez.demineur.ui.components.LedDisplay
 import fr.ghez.demineur.ui.components.MenuBar
 import fr.ghez.demineur.ui.components.MineGrid
+import fr.ghez.demineur.ui.components.ScrollIndicators
 import fr.ghez.demineur.ui.components.SmileyButton
 import fr.ghez.demineur.ui.components.TitleBar
 import fr.ghez.demineur.ui.theme.Win95
@@ -50,6 +51,7 @@ fun GameScreen(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var showCustomDialog by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -66,7 +68,7 @@ fun GameScreen(
                 gameLabel = stringResource(R.string.menu_game),
                 helpLabel = stringResource(R.string.menu_help),
                 onGameClick = { menuOpen = true },
-                onHelpClick = { onShowLeaderboard() },
+                onHelpClick = { showHelp = true },
             )
             GameMenu(
                 expanded = menuOpen,
@@ -90,6 +92,8 @@ fun GameScreen(
         Spacer(Modifier.height(4.dp))
 
         // Board area: sunken frame holding a board that scrolls when larger than the screen.
+        val vScroll = rememberScrollState()
+        val hScroll = rememberScrollState()
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -100,8 +104,8 @@ fun GameScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .horizontalScroll(rememberScrollState()),
+                    .verticalScroll(vScroll)
+                    .horizontalScroll(hScroll),
             ) {
                 MineGrid(
                     board = state.board,
@@ -109,6 +113,7 @@ fun GameScreen(
                     onCellLongPress = onCellLongPress,
                 )
             }
+            ScrollIndicators(vScroll, hScroll, Modifier.matchParentSize())
         }
     }
 
@@ -121,6 +126,10 @@ fun GameScreen(
             },
             onDismiss = { showCustomDialog = false },
         )
+    }
+
+    if (showHelp) {
+        HelpDialog(onDismiss = { showHelp = false })
     }
 }
 

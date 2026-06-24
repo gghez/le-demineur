@@ -1,10 +1,10 @@
 package fr.ghez.demineur.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,23 +48,45 @@ fun TitleBar(title: String, modifier: Modifier = Modifier) {
             fontFamily = FontFamily.SansSerif,
         )
         Spacer(Modifier.weight(1f))
-        WindowButton("_")
+        WindowButton(WinButton.MINIMIZE)
         Spacer(Modifier.width(2.dp))
-        WindowButton("□")
+        WindowButton(WinButton.MAXIMIZE)
         Spacer(Modifier.width(2.dp))
-        WindowButton("✕")
+        WindowButton(WinButton.CLOSE)
     }
 }
 
+private enum class WinButton { MINIMIZE, MAXIMIZE, CLOSE }
+
+/** A decorative title-bar button with its glyph drawn (and centered) on a Canvas. */
 @Composable
-private fun WindowButton(symbol: String) {
-    Box(
+private fun WindowButton(kind: WinButton) {
+    Canvas(
         modifier = Modifier
             .size(16.dp)
             .win95Bevel(raised = true, thickness = 1.dp, face = Win95.Face),
-        contentAlignment = Alignment.Center,
     ) {
-        Text(symbol, color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        val s = size.minDimension
+        val w = (s * 0.10f).coerceAtLeast(2.5f)
+        when (kind) {
+            WinButton.MINIMIZE -> {
+                val y = s * 0.66f
+                drawLine(Color.Black, Offset(s * 0.28f, y), Offset(s * 0.60f, y), strokeWidth = w)
+            }
+            WinButton.MAXIMIZE -> {
+                val l = s * 0.26f
+                val t = s * 0.24f
+                val side = s * 0.46f
+                drawRect(Color.Black, Offset(l, t), Size(side, side), style = Stroke(width = w))
+                // thicker top edge, like the title bar of a maximized window
+                drawLine(Color.Black, Offset(l, t + w), Offset(l + side, t + w), strokeWidth = w)
+            }
+            WinButton.CLOSE -> {
+                val p = s * 0.32f
+                drawLine(Color.Black, Offset(p, p), Offset(s - p, s - p), strokeWidth = w, cap = StrokeCap.Round)
+                drawLine(Color.Black, Offset(s - p, p), Offset(p, s - p), strokeWidth = w, cap = StrokeCap.Round)
+            }
+        }
     }
 }
 
@@ -94,7 +120,7 @@ private fun MenuLabel(label: String, onClick: () -> Unit) {
         fontFamily = FontFamily.SansSerif,
         modifier = Modifier
             .clickableNoRipple(onClick)
-            .padding(horizontal = 6.dp, vertical = 1.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp),
     )
 }
 

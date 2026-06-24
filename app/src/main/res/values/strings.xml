@@ -27,6 +27,17 @@
     <!-- Win / lose -->
     <string name="new_record">Nouveau record : %1$s !</string>
 
+    <!-- Help dialog -->
+    <string name="help_title">Comment jouer</string>
+    <string name="help_tap_title">Tap court</string>
+    <string name="help_tap_body">Révèle une case. Le premier tap n\'est jamais une mine.</string>
+    <string name="help_long_title">Appui long</string>
+    <string name="help_long_body">Pose ou retire un drapeau 🚩 sur une case suspecte.</string>
+    <string name="help_chord_title">Tap sur un chiffre</string>
+    <string name="help_chord_body">Si tu as posé autant de drapeaux que le chiffre, révèle d\'un coup toutes les cases voisines non marquées.</string>
+    <string name="help_smiley_title">Smiley</string>
+    <string name="help_smiley_body">Démarre une nouvelle partie. Le menu « Partie » change de niveau.</string>
+
     <!-- Content descriptions -->
     <string name="cd_smiley">Recommencer</string>
     <string name="cd_mine_count">Mines restantes</string>
