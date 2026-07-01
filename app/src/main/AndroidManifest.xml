@@ -10,11 +10,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Demineur">
 
-        <!-- Play Games Services project id (numeric). Placeholder until configured; sign-in is
-             guarded so the app runs without it. -->
+        <!--
+          Google Play Games (optional). The v2 SDK auto-initializes at launch and
+          REQUIRES a valid numeric APP_ID; an empty value crashes the app. So this
+          meta-data stays commented out by default; the release workflow uncomments
+          it once a real APP_ID is injected via local.properties (see
+          docs/agent-references/deployment.md).
+        -->
+        <!--
         <meta-data
             android:name="com.google.android.gms.games.APP_ID"
             android:value="@string/game_services_project_id" />
+        -->
 
         <activity
             android:name=".MainActivity"
