@@ -25,8 +25,15 @@ keytool -genkeypair -v -keystore "$KS" -alias "$ALIAS" \
   -keyalg RSA -keysize 2048 -validity 10000 -storetype JKS \
   -dname "$DNAME" -storepass "$STORE_PW" -keypass "$KEY_PW"
 
+# Merge into .store-passwd (idempotent: drop any previous keystore lines first) —
+# other scripts (setup-wif.sh, create-publisher-sa.sh) record their own values in
+# this same file, so clobbering it here would lose them if this script runs later
+# in the setup order.
 umask 077
-cat > "$ROOT/.store-passwd" <<EOF
+SP="$ROOT/.store-passwd"; touch "$SP"
+grep -vE '^(KEYSTORE_FILE|KEYSTORE_ALIAS|STORE_PASSWORD|KEY_PASSWORD)=' "$SP" > "$SP.tmp" || true
+mv "$SP.tmp" "$SP"
+cat >> "$SP" <<EOF
 # Démineur UPLOAD keystore credentials — NEVER commit or share. Back up the .jks securely.
 # With Play App Signing this is only the upload key; Google holds the final app-signing key.
 KEYSTORE_FILE=$KS
@@ -34,7 +41,7 @@ KEYSTORE_ALIAS=$ALIAS
 STORE_PASSWORD=$STORE_PW
 KEY_PASSWORD=$KEY_PW
 EOF
-chmod 600 "$ROOT/.store-passwd"
+chmod 600 "$SP"
 
 # Wire local.properties (idempotent: drop any previous RELEASE_* lines first)
 LP="$ROOT/local.properties"; touch "$LP"
