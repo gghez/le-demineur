@@ -9,8 +9,9 @@ allowed-tools: Bash, Read
 Compose/Kotlin Android game (package `fr.ghez.demineur`, `minSdk 24`, `target 35`).
 There is no desktop entry point — it runs on an Android emulator (or device) and is
 driven through **[`drive.sh`](drive.sh)**, a wrapper over `emulator` / `gradlew` /
-`adb`. The driver boots a headless AVD, installs the debug APK, launches the app, and
-screenshots it — so you can see and poke the UI without a physical phone.
+`adb`. The driver boots an AVD — **headless** for agent screenshots (`all`) or in a
+**visible window** for a human to watch (`window`) — installs the debug APK, launches
+the app, and screenshots / drives it.
 
 All paths below are relative to the repo root (the directory holding `gradlew`).
 The driver is at `.claude/skills/run-demineur/drive.sh`; it resolves the Android SDK
@@ -48,21 +49,34 @@ Drive individual steps or the UI:
 .claude/skills/run-demineur/drive.sh install       # ./gradlew :app:installDebug
 .claude/skills/run-demineur/drive.sh launch        # start MainActivity, assert it runs
 .claude/skills/run-demineur/drive.sh shot help     # -> build/emulator-shots/help.png
-.claude/skills/run-demineur/drive.sh tap 210 246   # inject a tap (drive the UI)
+.claude/skills/run-demineur/drive.sh tap 200 180   # inject a tap (drive the UI)
 .claude/skills/run-demineur/drive.sh stop          # kill the emulator when done
 ```
 
-Example — open the "Comment jouer" dialog and capture it (tap coords are for the
-`demineur` AVD, a Pixel 6 profile at 1080×2400; re-measure for other AVDs):
+Example — open the "Comment jouer" dialog and capture it. The `?` menu label is a small
+target near (200, 180) on the `demineur` AVD (Pixel 6, 1080×2400), but the exact y drifts
+a few px with the status-bar inset, so **screenshot → measure → tap** rather than trusting
+a hardcoded pair:
 
 ```bash
-.claude/skills/run-demineur/drive.sh tap 210 246 && sleep 1 && .claude/skills/run-demineur/drive.sh shot help
+.claude/skills/run-demineur/drive.sh tap 200 180 && sleep 1 && .claude/skills/run-demineur/drive.sh shot help
 ```
 
-## Run (human path)
+## Run (human path) — watch it in a real window
 
-Open the project in Android Studio and Run, or `./gradlew :app:installDebug` against a
-plugged-in device, then launch from the launcher. Useless headless — use the driver.
+The agent path above is **headless**: great for screenshots, but nothing appears on screen.
+To actually *watch* the app, boot with a visible window:
+
+```bash
+.claude/skills/run-demineur/drive.sh window     # boot AVD with a window + install + launch
+```
+
+Needs a display: on Windows this means **WSLg** (present if `echo $DISPLAY` is non-empty and
+`/mnt/wslg` exists) — the emulator opens on the Windows desktop. Stop a headless emulator
+first (`drive.sh stop`) so this one takes its place.
+
+Alternatives: open the project in Android Studio and Run, or `./gradlew :app:installDebug`
+against a plugged-in physical device, then launch from the launcher.
 
 ## Test
 

@@ -8,7 +8,8 @@
 # is resolved from the environment / local.properties / the conventional default.
 #
 # Usage:
-#   drive.sh all              # boot + install + launch + screenshot (one shot)
+#   drive.sh all              # headless: boot + install + launch + screenshot
+#   drive.sh window           # VISIBLE window (for a human to watch): boot + install + launch
 #   drive.sh boot             # boot the AVD headless (or reuse a running one)
 #   drive.sh install          # ./gradlew :app:installDebug
 #   drive.sh launch           # start MainActivity
@@ -17,7 +18,8 @@
 #   drive.sh stop             # kill the running emulator
 #   drive.sh sdk              # print the resolved SDK path and exit
 #
-# Env overrides: DEMINEUR_AVD, DEMINEUR_SHOT_DIR, DEMINEUR_SYSIMG, DEMINEUR_DEVICE
+# Env overrides: DEMINEUR_AVD, DEMINEUR_SHOT_DIR, DEMINEUR_SYSIMG, DEMINEUR_DEVICE,
+#                DEMINEUR_HEADLESS (1 = no window [default], 0 = visible window)
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,6 +31,7 @@ AVD="${DEMINEUR_AVD:-demineur}"
 SYSIMG="${DEMINEUR_SYSIMG:-system-images;android-35;google_apis;x86_64}"
 DEVICE="${DEMINEUR_DEVICE:-pixel_6}"
 SHOT_DIR="${DEMINEUR_SHOT_DIR:-$REPO_ROOT/build/emulator-shots}"
+HEADLESS="${DEMINEUR_HEADLESS:-1}"
 
 # --- Resolve the Android SDK without hardcoding any absolute path ----------
 resolve_sdk() {
@@ -83,11 +86,18 @@ cmd_boot() {
   local serial; serial="$(running_serial)"
   if [ -n "$serial" ]; then echo "drive.sh: reusing running emulator $serial"; return; fi
   ensure_avd
-  echo "drive.sh: booting '$AVD' headless (software GPU)..."
-  # Headless + swiftshader is the reliable combo under WSL/CI. Detached so the
-  # script returns; logs go to the shot dir.
   mkdir -p "$SHOT_DIR"
-  nohup emulator -avd "$AVD" -no-window -no-audio -no-boot-anim \
+  # swiftshader (software) is the reliable GPU under WSL/CI. Detached so the
+  # script returns; logs go to the shot dir.
+  local winflags=""
+  if [ "$HEADLESS" = "1" ]; then
+    winflags="-no-window -no-boot-anim"
+    echo "drive.sh: booting '$AVD' headless (software GPU)..."
+  else
+    echo "drive.sh: booting '$AVD' with a VISIBLE window (needs a display; WSLg on Windows)..."
+  fi
+  # shellcheck disable=SC2086  # winflags is an intentional word-split flag list
+  nohup emulator -avd "$AVD" $winflags -no-audio \
     -gpu swiftshader_indirect -no-snapshot >"$SHOT_DIR/emulator.log" 2>&1 &
   wait_boot
 }
@@ -137,6 +147,8 @@ case "${1:-all}" in
   tap)     shift; cmd_tap "$@" ;;
   stop)    cmd_stop ;;
   all)     cmd_boot; cmd_install; cmd_launch; cmd_shot home ;;
-  help|-h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" ;;
-  *)       die "unknown command '$1' (try: all boot install launch shot tap stop sdk)" ;;
+  window)  HEADLESS=0; cmd_boot; cmd_install; cmd_launch
+           echo "drive.sh: look at your desktop — the emulator window is showing the app" ;;
+  help|-h|--help) sed -n '2,27p' "${BASH_SOURCE[0]}" ;;
+  *)       die "unknown command '$1' (try: all window boot install launch shot tap stop sdk)" ;;
 esac
