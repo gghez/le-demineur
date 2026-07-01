@@ -11,6 +11,8 @@ captures/
 *.jks
 *.keystore
 !debug.keystore
+play-service-account.json
+.store-passwd
 # OS
 .DS_Store
 # Claude Code worktrees / local agent state (ignore everything under .claude/ ...

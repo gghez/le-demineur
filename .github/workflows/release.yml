@@ -1,0 +1,119 @@
+name: Release to Google Play (internal)
+
+# Pushing a semver tag (vX.Y.Z) builds a signed AAB and releases it on the
+# Play "internal" testing track. The first production publish stays manual
+# (see docs/agent-references/deployment.md); promote internal -> production in
+# the Play Console when you are ready.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+# Least privilege: publishing goes to Play via a short-lived, Workload-Identity-
+# Federation-minted token (keyless — no SA key stored), not the GITHUB_TOKEN.
+# `id-token: write` lets the runner mint the GitHub OIDC token that WIF exchanges
+# for a ~1h GCP token; `contents: read` is all the repo access we need.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Derive versionName/versionCode from the tag: v1.2.3 -> "1.2.3" / 10203.
+      # app/build.gradle.kts reads VERSION_NAME / VERSION_CODE from the environment.
+      - name: Derive version from tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VER="${TAG#v}"
+          IFS='.' read -r MAJ MIN PAT <<< "$VER"
+          if [ -z "$MAJ" ] || [ -z "$MIN" ] || [ -z "$PAT" ]; then
+            echo "Tag '$TAG' is not vMAJOR.MINOR.PATCH"; exit 1
+          fi
+          CODE=$(( 10#$MAJ * 10000 + 10#$MIN * 100 + 10#$PAT ))
+          {
+            echo "VERSION_NAME=$VER"
+            echo "VERSION_CODE=$CODE"
+          } >> "$GITHUB_ENV"
+          echo "Releasing $VER (versionCode $CODE)"
+
+      # Restore the upload keystore (base64-encoded secret) to a temp file.
+      - name: Restore upload keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+        run: printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+
+      # local.properties carries signing creds + the Play Games / leaderboard ids
+      # that get injected as string resources (resValue). Never committed.
+      - name: Write local.properties
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          PLAY_GAMES_APP_ID: ${{ secrets.PLAY_GAMES_APP_ID }}
+          LEADERBOARD_BEGINNER: ${{ secrets.LEADERBOARD_BEGINNER }}
+          LEADERBOARD_INTERMEDIATE: ${{ secrets.LEADERBOARD_INTERMEDIATE }}
+          LEADERBOARD_EXPERT: ${{ secrets.LEADERBOARD_EXPERT }}
+        run: |
+          cat > local.properties <<EOF
+          RELEASE_STORE_FILE=$RUNNER_TEMP/upload.jks
+          RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD
+          RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS
+          RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD
+          playGamesAppId=$PLAY_GAMES_APP_ID
+          leaderboardBeginner=$LEADERBOARD_BEGINNER
+          leaderboardIntermediate=$LEADERBOARD_INTERMEDIATE
+          leaderboardExpert=$LEADERBOARD_EXPERT
+          EOF
+
+      # Play Games Services v2 requires the games.APP_ID meta-data. It is kept
+      # commented in the committed manifest (an empty APP_ID crashes the app, so
+      # local/Noop builds must not include it). CI has a real APP_ID -> enable it.
+      - name: Enable Play Games meta-data
+        run: |
+          perl -0pi -e 's{<!--\s*(<meta-data\s+android:name="com\.google\.android\.gms\.games\.APP_ID".*?/>)\s*-->}{$1}s' \
+            app/src/main/AndroidManifest.xml
+          grep -q 'games.APP_ID' app/src/main/AndroidManifest.xml
+
+      - name: Build signed AAB
+        run: ./gradlew bundleRelease
+
+      # Keyless auth: GitHub's OIDC token is exchanged (WIF) for a ~1h GCP token,
+      # minted directly with the androidpublisher scope. WIF_PROVIDER / WIF_SERVICE_ACCOUNT
+      # are repo secrets (they carry the project number / SA email — never committed).
+      # Set them with scripts/setup-wif.sh + scripts/set-github-secrets.sh.
+      - name: Authenticate to Google (Workload Identity Federation, keyless)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      # The minted token feeds the canonical REST publish path. Blank GCP_PROJECT:
+      # google-github-actions/auth exports it, which would make the script send
+      # `x-goog-user-project` and trigger a serviceusage permission check the
+      # publisher SA lacks (403). androidpublisher access is governed by the Play
+      # Console grant, not the quota project.
+      - name: Release on internal track
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          GCP_PROJECT: ""
+          TRACK: internal
+          AAB_PATH: app/build/outputs/bundle/release/app-release.aab
+        run: bash scripts/publish-internal.sh

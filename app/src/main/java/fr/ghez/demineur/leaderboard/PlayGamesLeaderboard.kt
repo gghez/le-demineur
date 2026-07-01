@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * silently so the game keeps working offline or when the user declines sign-in.
  *
  * Requires [com.google.android.gms.games.PlayGamesSdk.initialize] to have run (see DemineurApp),
- * and real leaderboard IDs wired into res/values/games-ids.xml.
+ * and real leaderboard IDs injected via local.properties (see
+ * docs/agent-references/deployment.md) — resolved as build-time `resValue`s.
  */
 class PlayGamesLeaderboard(private val appContext: Context) : LeaderboardService {
 
@@ -58,7 +59,7 @@ class PlayGamesLeaderboard(private val appContext: Context) : LeaderboardService
         }.onFailure { Log.w(TAG, "showLeaderboard failed", it) }
     }
 
-    /** Resolves a difficulty to its configured leaderboard id, or null if still a placeholder. */
+    /** Resolves a difficulty to its configured leaderboard id, or null if not configured. */
     private fun leaderboardIdFor(difficulty: Difficulty): String? {
         val resId = when (difficulty.id) {
             Difficulty.Beginner.id -> R.string.leaderboard_beginner
@@ -66,12 +67,10 @@ class PlayGamesLeaderboard(private val appContext: Context) : LeaderboardService
             Difficulty.Expert.id -> R.string.leaderboard_expert
             else -> return null
         }
-        val value = appContext.getString(resId)
-        return value.takeIf { it.isNotBlank() && !it.startsWith(PLACEHOLDER_PREFIX) }
+        return appContext.getString(resId).takeIf { it.isNotBlank() }
     }
 
     private companion object {
         const val TAG = "PlayGamesLeaderboard"
-        const val PLACEHOLDER_PREFIX = "REPLACE_"
     }
 }
